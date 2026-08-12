@@ -38,11 +38,21 @@ const schemaFiles = [
 ]
 const schemas = schemaFiles.map(file => require(`../../database/models/${file}`));
 
+function createWebhookClient(webhookData) {
+    if (!webhookData || !webhookData.id || !webhookData.token) return null;
+    try {
+        return new discord.WebhookClient({
+            id: webhookData.id,
+            token: webhookData.token,
+        });
+    } catch (err) {
+        console.warn(`Failed to create webhook client:`, err.message);
+        return null;
+    }
+}
+
 module.exports = async (client, guild) => {
-    const kickLogs = new discord.WebhookClient({
-        id: client.webhooks.serverLogs2.id,
-        token: client.webhooks.serverLogs2.token,
-    });
+    const kickLogs = createWebhookClient(client.webhooks.serverLogs2);
 
     if (guild.name == undefined) return;
 
@@ -64,11 +74,13 @@ module.exports = async (client, guild) => {
             )
             .setThumbnail("https://cdn.discordapp.com/attachments/843487478881976381/852419424895631370/BotSadEmote.png")
             .setColor(client.config.colors.normal)
-        kickLogs.send({
-            username: 'Bot Logs',
-            avatarURL: client.user.avatarURL(),
-            embeds: [embed],
-        });
+        if (kickLogs) {
+            kickLogs.send({
+                username: 'Bot Logs',
+                avatarURL: client.user.avatarURL(),
+                embeds: [embed],
+            });
+        }
     })
 
     for (const schema of schemas) {
