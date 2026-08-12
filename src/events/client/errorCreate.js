@@ -8,10 +8,13 @@ module.exports = (client, err, command, interaction) => {
         numbers: true
     });
 
-    const errorlog = new Discord.WebhookClient({
-        id: client.webhooks.errorLogs.id,
-        token: client.webhooks.errorLogs.token,
-    });
+    let errorlog = null;
+    if (client.webhooks.errorLogs && client.webhooks.errorLogs.id && client.webhooks.errorLogs.token) {
+        errorlog = new Discord.WebhookClient({
+            id: client.webhooks.errorLogs.id,
+            token: client.webhooks.errorLogs.token,
+        });
+    }
 
     let embed = new Discord.EmbedBuilder()
         .setTitle(`🚨・${password}`)
@@ -22,11 +25,13 @@ module.exports = (client, err, command, interaction) => {
             { name: `📃┇Stack error`, value: `\`\`\`${err.stack.substr(0, 1018)}\`\`\``},
         )
         .setColor(client.config.colors.normal)
-    errorlog.send({
-        username: `Bot errors`,
-        embeds: [embed],
+    if (errorlog) {
+        errorlog.send({
+            username: `Bot errors`,
+            embeds: [embed],
 
-    }).catch(error => { console.log(error) })
+        }).catch(error => { console.log(error) })
+    }
 
     let row = new Discord.ActionRowBuilder()
         .addComponents(
