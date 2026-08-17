@@ -20,10 +20,14 @@ const fetch = require("node-fetch");
  * @returns 
  */
 module.exports = async (client, message) => {
-  const dmlog = new Discord.WebhookClient({
-    id: client.webhooks.dmLogs.id,
-    token: client.webhooks.dmLogs.token,
-  });
+  const dmLogsWebhook = client.webhooks.dmLogs;
+  const dmlog =
+    dmLogsWebhook && dmLogsWebhook.id && dmLogsWebhook.token
+      ? new Discord.WebhookClient({
+          id: dmLogsWebhook.id,
+          token: dmLogsWebhook.token,
+        })
+      : null;
 
   if (message.author.bot) return;
 
@@ -42,10 +46,13 @@ module.exports = async (client, message) => {
       embedLogs.addFields(
         { name: `📃┆Attachments`, value: `${message.attachments.first()?.url}`, inline: false },
       )
-    return dmlog.send({
-      username: "Bot DM",
-      embeds: [embedLogs],
-    });
+    if (dmlog) {
+      return dmlog.send({
+        username: "Bot DM",
+        embeds: [embedLogs],
+      });
+    }
+    return;
   }
 
   // Levels
@@ -402,7 +409,7 @@ module.exports = async (client, message) => {
     Name: command,
   });
   if (cmd) {
-    return message.channel.send({ content: cmdx.Responce });
+    return message.channel.send({ content: cmd.Responce });
   }
 
   const cmdx = await CommandsSchema.findOne({
